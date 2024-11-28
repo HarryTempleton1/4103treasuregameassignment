@@ -18,7 +18,7 @@ def main():
             break
         else:
             print("invalid input please input a number 1-4")
-    print("thanks for playing!")
+    print("thanks for playing")
 
 def creategrid():
     row1 = ['1','2','3','4','5']
