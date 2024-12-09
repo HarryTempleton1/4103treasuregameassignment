@@ -1,4 +1,5 @@
 import random
+from collections import deque as queue
 
 def main():
     print("welcome to the treasure game")
@@ -25,10 +26,26 @@ def main():
                     break
             else:
                 print("invalid choice")
+
         if menuChoice == 2:
-            print(grid)
+            for i in range(5):
+                print("\n", grid[i])
+            searchChoice = 0
+            print("which type of search would you like to do")
+            print("1.BS\n2.DFS\n3.BFS")
+            searchChoice = int(input())
+            if searchChoice == 1:
+                print("treasure is at: ", binary_search(grid))
+            if searchChoice == 2:
+                pass
+            if searchChoice == 3:
+                pass
+            else:
+                print("invalid input")
+
         if menuChoice == 3:
             checkHP(playerHealth)
+
         if menuChoice == 4:
             break
     print("thanks for playing")
@@ -36,23 +53,28 @@ def main():
 def creategrid():
     #initialises grid with 0s. points on grid can be accessed with [row][collumn]
     grid = [[0 for i in range(5)] for i in range(5)]
-    # #X is treasure. creates a treasure at a random point in the bottom row
-    grid[4][random.randint(0, 4)] = 'X'
-    #creates traps at a random point in rows 2-4 (not on row 1 as that is where the player will spawn)
-    grid[1][random.randint(0,4)] = 'T'
-    grid[2][random.randint(0,4)] = 'T'
-    grid[3][random.randint(0,4)] = 'T'
-    #Creates a power up at a random point on rows 2 and 4
-    grid[1][random.randint(0,4)] = 'P'
-    grid[3][random.randint(0,4)] = 'P'
+    #creates traps at a random point
+    for i in range(8):
+        grid[random.randint(0,4)][random.randint(0,4)] = 'T'
+    #Creates a power up at random points
+    for i in range(5):
+        grid[random.randint(0,4)][random.randint(0,4)] = 'P'
+    # #X is treasure. creates a treasure at a random point
+    grid[random.randint(0,4)][random.randint(0, 4)] = 'X'
     #creates the player/pointer. this will be used to interact with traps, powerups and the treasure
     grid[0][random.randint(0,4)] = '-'
     return(grid)
 
 def find_player(grid):
-    for row_idx,row in enumerate(grid):
+    for row_idx,row in enumerate(grid): #enumerate allows the grids row/collumn values to be split into two seperate variables
         for col_idx, cell in enumerate(row):
             if cell =='-':
+                return (row_idx, col_idx)
+
+def find_treasure(grid):
+    for row_idx,row in enumerate(grid): #enumerate allows the grids row/collumn values to be split into two seperate variables
+        for col_idx, cell in enumerate(row):
+            if cell =='X':
                 return (row_idx, col_idx)
 
 def move(grid, direction, playerHealth):
@@ -109,20 +131,35 @@ def move(grid, direction, playerHealth):
     print("cannot move out of bounds")
     return grid, True
 
-def search():
-    searchChoice = 0
-    print("which type of search would you like to do")
-    print("1.BS\n2.DFS\n3.BFS")
-    searchChoice = int(input())
-    if searchChoice == 1:
-        pass
-    if searchChoice == 2:
-        pass
-    if searchChoice == 3:
-        pass
-    else:
-        print("invalid input")
-    
+def binary_search(grid):
+    #turns 2d grid into 1d list for binary search
+    rows = len(grid)
+    cols = len(grid[0])
+
+    left = 0
+    right = rows * cols -1
+
+    while left<= right:
+        mid = (left + right)//2 #calculates the middle of the list
+        #converts 1d index back into 2d grid cordinates
+        row = mid//5
+        col = mid%5
+        
+        if grid[row][col] == 'X':
+            return(row, col)
+        elif grid[row][col] == 0:
+            if random.choice([True, False]):
+                left = mid +1
+            else:
+                right = mid -1
+        else:
+            left = mid -1
+    return None
+
+def bfs(grid):
+    pass
+def dfs(grid):
+    pass
 
 def checkHP(playerHealth):
     print("HP = ",playerHealth)
