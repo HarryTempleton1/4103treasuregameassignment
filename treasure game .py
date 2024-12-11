@@ -17,8 +17,8 @@ def main():
     grid = creategrid()
     menuChoice = 0
     playerHealth = 3
-    while menuChoice != 4:
-        print("1.Move\n2.Search\n3.Check HP\n4.Quit")
+    while menuChoice != 5:
+        print("1.Move\n2.Search\n3.Check HP\n4.Rules\n5.Quit")
         try:
             menuChoice = int(input())
         except(ValueError):
@@ -42,23 +42,27 @@ def main():
                 print("invalid choice")
 
         if menuChoice == 2:
-            for i in range(5):
-                print("\n", grid[i])
             searchChoice = 0
             print("which type of search would you like to do")
             print("1.BS\n2.BFS\n3.DFS")
-            searchChoice = int(input())
+            try:
+                searchChoice = int(input())
+            except(ValueError):
+                print("INVALID INPUT")
             if searchChoice == 1:
                 print("treasure is at: ", binary_search(grid))
             if searchChoice == 2:
                 bfs(grid)
             if searchChoice == 3:
-                pass
+                dfs(grid)
 
         if menuChoice == 3:
             checkHP(playerHealth)
-
+        
         if menuChoice == 4:
+            print("Use the numbers on your keyboard to navigate the menus and move your character\nyou start with three lives. walking over a trap takes away one life, collecting a power up adds one life\nBinary search gives the treasures exact location\nbreadth first search gives the shortest path to the treasure ignoring all traps and power ups. This can be dangerous as you dont know if you can survive.\ndepth first search gives the shortest path to the treasure but it cannot navigate through traps or powerups, this means it wont always work.")
+
+        if menuChoice == 5:
             break
     print("thanks for playing")
 
@@ -198,8 +202,8 @@ def bfs(grid):
                 current_row, current_col = parent[current_row][current_col]
             path.append(start)
             path.reverse()
-
-            print("shortest path to treasure:")
+            #prints path array which stores the path taken to get to the treasure
+            print("shortest path to treasure (format is row, column):")
             for step in path:
                 print(step)
             return path
@@ -216,10 +220,68 @@ def bfs(grid):
                 queue.append((new_row, new_col))
                 visited[new_row][new_col] = True
                 parent[new_row][new_col] = (current_row, current_col)
-    print("An error has occured and there is no path to treasure")
+    print("An error has occured and there is no path to treasure (the treasure may have overwritten the players location making the player non existant. please reload the game and try again)")
 
 def dfs(grid):
-    pass
+    # Possible moves (up, down, left, right)
+    moves = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+    rows = len(grid)
+    cols = len(grid[0])
+
+    #marks player pos as the start of the DFS
+    start = find_player(grid)
+    
+    #array that stores visited points on grid 
+    visited = [[False] * cols for i in range(rows)]
+    
+    #array to store reconstructed rout
+    parent = [[None] * cols for i in range(rows)]
+    
+    def is_valid_move(row, col):
+        #checks that move is in bounds and is not visited and is not a trap 
+        return (0 <= row < rows and 0 <= col < cols and not visited[row][col] and grid[row][col] != 'T' and grid[row][col])
+    
+    def depth_first_search(current_row, current_col):
+        #marks cell as visited
+        visited[current_row][current_col] = True
+        
+        #check if treasure is found
+        if grid[current_row][current_col] == 'X':
+            #reconstruct path
+            path = []
+            while (current_row, current_col) != start:
+                path.append((current_row, current_col))
+                current_row, current_col = parent[current_row][current_col]
+            path.append(start)
+            path.reverse()
+            
+            #prints the path
+            print("Path to treasure (format is row, column):")
+            for step in path:
+                print(step)
+            return path
+        
+        #explores neighboring cells
+        for dx, dy in moves:
+            new_row = current_row + dx
+            new_col = current_col + dy
+            
+            if is_valid_move(new_row, new_col):
+                parent[new_row][new_col] = (current_row, current_col)
+                
+                # Recursive DFS call
+                result = depth_first_search(new_row, new_col)
+                if result:
+                    return result
+        
+        # Backtrack
+        return None
+    
+    #starts DFS
+    result = depth_first_search(start[0], start[1])
+    if not result:
+        print("No path to treasure found that avoids traps")
+
 
 def checkHP(playerHealth):
     print("HP = ",playerHealth)
