@@ -1,18 +1,32 @@
 import random
-from collections import deque as queue
+from collections import deque
+
+"""
+grid legend
+- = player
+0 = free space
+T = trap
+P = power up
+X = treasure
+"""
+
+
 
 def main():
     print("welcome to the treasure game")
     grid = creategrid()
     menuChoice = 0
-    playerHealth = 1
+    playerHealth = 3
     while menuChoice != 4:
         print("1.Move\n2.Search\n3.Check HP\n4.Quit")
-        menuChoice = int(input())
+        try:
+            menuChoice = int(input())
+        except(ValueError):
+            print("invalid input")
         if menuChoice == 1:
             print("\nChoose a direction:\n1. UP\n2. DOWN\n3. LEFT\n4. RIGHT\n5. QUIT")
-            choice = input("Enter your choice (1-5): ")
-            #dictionary translates number choice to a direction
+            choice = input("Enter your choice (1-5): ") 
+            #dictionary translates number choice to a direction. This prevents crashing in a more efficient way than using try except statements
             direction_map = {
                 '1': 'UP',
                 '2': 'DOWN',
@@ -32,16 +46,14 @@ def main():
                 print("\n", grid[i])
             searchChoice = 0
             print("which type of search would you like to do")
-            print("1.BS\n2.DFS\n3.BFS")
+            print("1.BS\n2.BFS\n3.DFS")
             searchChoice = int(input())
             if searchChoice == 1:
                 print("treasure is at: ", binary_search(grid))
             if searchChoice == 2:
-                pass
+                bfs(grid)
             if searchChoice == 3:
                 pass
-            else:
-                print("invalid input")
 
         if menuChoice == 3:
             checkHP(playerHealth)
@@ -98,7 +110,7 @@ def move(grid, direction, playerHealth):
     
     #checks if within boundries of the grid 
     if 0 <= new_row < 5 and 0 <= new_col < 5:
-        #deletes the old player position
+        #deletes the old player position1
         grid[row][col] = 0
 
         if grid[new_row][new_col] == 'T':
@@ -127,8 +139,8 @@ def move(grid, direction, playerHealth):
         grid[new_row][new_col] = '-'
         print("You have moved to ", find_player(grid))
         return grid, True
-    
-    print("cannot move out of bounds")
+    else:
+        print("cannot move out of bounds")
     return grid, True
 
 def binary_search(grid):
@@ -136,28 +148,76 @@ def binary_search(grid):
     rows = len(grid)
     cols = len(grid[0])
 
+    flat_grid = [grid[r][c] for r in range(rows) for c in range(cols)]
+
     left = 0
-    right = rows * cols -1
+    right = len(flat_grid) - 1
 
     while left<= right:
         mid = (left + right)//2 #calculates the middle of the list
         #converts 1d index back into 2d grid cordinates
-        row = mid//5
-        col = mid%5
-        
+        row = mid//cols
+        col = mid%cols
         if grid[row][col] == 'X':
-            return(row, col)
-        elif grid[row][col] == 0:
-            if random.choice([True, False]):
-                left = mid +1
-            else:
-                right = mid -1
-        else:
-            left = mid -1
-    return None
+            print(row, col)
+        left  += 1
+        right -= 1
+        
+    #grid is randomised so it doesnt really make any sense to do a binary search as for a binary search to work the list needs to be ordered
+    #doing linear search instead (which is already done at find_treasure())
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == 'X':
+                return (r, c)
+      
+    return (row, col)
 
 def bfs(grid):
-    pass
+    #possible moves pointer can make (left right down up)
+    moves = [ [-1,0], [1,0], [0,-1], [0,1]]
+    rows=len(grid)
+    cols=len(grid[0])
+
+    start = find_player(grid)
+    #array to store visited nodes on grid
+    visited = [[False] * cols for i in range(rows)]
+    #array to store coords of the cell that led to current cell
+    parent = [[None]* cols for i in range(rows)]
+
+    queue = deque([start])
+    
+    visited[start[0]][start[1]] = True
+    while len(queue):
+        current_row, current_col = queue.popleft()
+        
+        if grid[current_row][current_col] == 'X':
+            #reconstructs path taken to get to treasure
+            path = []
+            while (current_row, current_col)!= start:
+                path.append((current_row, current_col))
+                current_row, current_col = parent[current_row][current_col]
+            path.append(start)
+            path.reverse()
+
+            print("shortest path to treasure:")
+            for step in path:
+                print(step)
+            return path
+        
+        #explores surrounding cells 
+        for dx, dy in moves:
+            new_row = current_row + dx
+            new_col = current_col + dy
+            #checks if next move is in bounds and not already visited 
+            if (0 <= new_row <rows and
+                0<= new_col < cols and
+                not visited[new_row][new_col]):
+
+                queue.append((new_row, new_col))
+                visited[new_row][new_col] = True
+                parent[new_row][new_col] = (current_row, current_col)
+    print("An error has occured and there is no path to treasure")
+
 def dfs(grid):
     pass
 
